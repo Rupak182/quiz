@@ -66,7 +66,7 @@ export default function PDFQuizGenerator() {
       toast.error("Failed to generate quiz. Please try again.");
       setFiles([]);
     },
-    onFinish: ({ object }: { object: any}) => {
+    onFinish: ({ object }: { object: any}) => {  // fix types
       // Handle the generated questions here
       console.log(object);
       if (object) {
@@ -113,20 +113,7 @@ export default function PDFQuizGenerator() {
     });
   };
 
-  const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const encodedFiles = await Promise.all(
-      files.map(async (file) => ({
-        name: file.name,
-        type: file.type,
-        data: await encodeFileAsBase64(file),
-      })),
-    );
-    submit({ files: encodedFiles });
-    const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
-    setTitle(generatedTitle);
-  };
-
+  
   useEffect(() => {
     if (quizType && files.length > 0) {
       const handleSubmit = async () => {
@@ -142,10 +129,9 @@ export default function PDFQuizGenerator() {
         const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
         setTitle(generatedTitle);
       };
-  
       handleSubmit();
     }
-  }, [quizType,files,submit]); // Trigger when quizType changes
+  }, [quizType]); // Trigger when quizType changes
   
   const handleTestClick = async () => {
     if (files.length === 0) return;
@@ -225,7 +211,7 @@ export default function PDFQuizGenerator() {
             <Button
               variant="secondary"
               key={option.label}
-              disabled={files.length ===  0} 
+              disabled={files.length ===  0 || isLoading} 
               onClick={() => handlers[option.handler as keyof typeof handlers]()}            >
               {option.label}
             </Button>
@@ -292,7 +278,6 @@ export default function PDFQuizGenerator() {
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmitWithFiles} className="space-y-4">
               <div
                 className={`relative flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 transition-colors hover:border-muted-foreground/50`}
               >
@@ -313,9 +298,7 @@ export default function PDFQuizGenerator() {
                   )}
                 </p>
               </div>
-              
-            </form>
-          </CardContent>
+            </CardContent>
         </Card>
 
       </div>

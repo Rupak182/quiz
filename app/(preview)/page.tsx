@@ -1,4 +1,5 @@
 "use client"
+import { data } from "@/lib/data";
 
 const options = [
   {
@@ -22,9 +23,10 @@ const options = [
 ];
 
 
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { experimental_useObject } from "@ai-sdk/react";
-import { learnQuestionsSchema, questionsSchema } from "@/lib/schemas";
+import { learnQuestionsSchema, questionsSchema, testQuestionsSchema } from "@/lib/schemas";
 import { z } from "zod";
 import { toast } from "sonner";
 import { FileUp, Plus, Loader2 } from "lucide-react";
@@ -44,28 +46,39 @@ import { generateQuizTitle } from "./actions";
 import { AnimatePresence, motion } from "framer-motion";
 import { VercelIcon, GitIcon } from "@/components/icons";
 import { useRouter } from "next/navigation";
+import Quiz from "@/components/quiz";
+import Test from "@/components/test";
 
 export default function PDFQuizGenerator() {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [title, setTitle] = useState<string>();
   const [quizType,setQuizType] = useState<string>();
+  const [learnQuestion, setLearnQuestion] = useState<z.infer<typeof learnQuestionsSchema> >([]);
+  const [testQuestion, setTestQuestion] = useState<z.infer<typeof testQuestionsSchema> >([]);
+
   const {
     submit,
     object: partialQuestions,
     isLoading,
   } = experimental_useObject({
-    api: "/api/generate-quiz",
-    schema: learnQuestionsSchema,
+    api: quizType === "test" ? "/api/generate-test" : "/api/generate-quiz",
+    schema: quizType === "test" ? testQuestionsSchema : learnQuestionsSchema,
     initialValue: undefined,
     onError: (error: Error) => {
       toast.error("Failed to generate quiz. Please try again.");
       setFiles([]);
     },
-    onFinish: ({ object }: { object: z.infer<typeof learnQuestionsSchema> | undefined }) => {
+    onFinish: ({ object }: { object: any}) => {
       // Handle the generated questions here
       console.log(object);
-      
+      if (object) {
+        if (quizType === "learn") {
+          setLearnQuestion(object);
+        } else if (quizType === "test") {
+          setTestQuestion(object);
+        }
+      }
     },
   });
 
@@ -114,9 +127,62 @@ export default function PDFQuizGenerator() {
     setTitle(generatedTitle);
   };
 
+  useEffect(() => {
+    if (quizType && files.length > 0) {
+      const handleSubmit = async () => {
+        const encodedFiles = await Promise.all(
+          files.map(async (file) => ({
+            name: file.name,
+            type: file.type,
+            data: await encodeFileAsBase64(file),
+          })),
+        );
+        submit({ files: encodedFiles });
+        const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
+        setTitle(generatedTitle);
+      };
+  
+      handleSubmit();
+    }
+  }, [quizType]); // Trigger when quizType changes
+  
+  const handleTestClick = async () => {
+    if (files.length === 0) return;
+    setQuizType("test"); // This will trigger the useEffect
+  };
+
+  const handleLearnClick = async () => {
+    if (files.length === 0) return;
+    setQuizType("learn"); // This will trigger the useEffect
+  };
+
+  const clearPDF = () => {
+    setFiles([]);
+    if (quizType === "learn") {
+      setLearnQuestion([]);
+    } else if (quizType === "test") {
+      setTestQuestion([]);
+    }
+  };
+
   const progress = partialQuestions ? (partialQuestions.length / 4) * 100 : 0;
 
   const router = useRouter();
+
+  if (learnQuestion.length === 4 && quizType === "learn") {
+    return (
+      <Quiz title={title ?? "Quiz"} questions={learnQuestion} clearPDF={clearPDF}  />
+    );
+  }
+
+  if (testQuestion.length === 10 && quizType === "test") {
+    return (
+      <Test title={title ?? "Quiz"} questions={testQuestion} clearPDF={clearPDF}  />
+    );
+  }
+
+  // return <Test title={title ?? "Quiz"} questions={data} clearPDF={clearPDF}  />
+
 
   return (
     <div className="min-h-[100dvh] w-full flex justify-center flex-col" >
@@ -128,8 +194,8 @@ export default function PDFQuizGenerator() {
             <Button
               variant="secondary"
               key={option.label}
-              disabled={isLoading || files.length ===  0} 
-              onClick={() => router.push(option.href)}
+              disabled={files.length ===  0} 
+              onClick={() => handleLearnClick()}
             >
               {option.label}
             </Button>

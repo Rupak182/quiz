@@ -20,6 +20,9 @@ export type LearnQuestion = z.infer<typeof learnQuestionSchema>;
 export const learnQuestionsSchema = z.array(learnQuestionSchema).length(4);
 export const testQuestionsSchema = z.array(learnQuestionSchema).length(10);
 
+export const testQuestionSchema =learnQuestionSchema
+
+
 export const questionSchema = z.object({
   question: z.string(),
   options: z

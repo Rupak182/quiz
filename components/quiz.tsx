@@ -12,16 +12,16 @@ import {
 } from "lucide-react";
 import QuizScore from "./score";
 import QuizReview from "./quiz-overview";
-import { Question } from "@/lib/schemas";
+import { LearnQuestion         } from "@/lib/schemas";
 
 type QuizProps = {
-  questions: Question[];
+  questions: LearnQuestion[];
   clearPDF: () => void;
   title: string;
 };
 
 const QuestionCard: React.FC<{
-  question: Question;
+  question: LearnQuestion;
   selectedAnswer: string | null;
   onSelectAnswer: (answer: string) => void;
   isSubmitted: boolean;

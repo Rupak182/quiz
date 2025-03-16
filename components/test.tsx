@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Check, X } from "lucide-react";
+import { Check, RefreshCw, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { data } from "@/lib/data";
 import { useEffect } from "react";
@@ -41,11 +41,18 @@ export default function Test({ questions, title, clearPDF }: TestProps) {
 
   const allQuestionsAnswered = selectedAnswers.every(answer => answer !== "");
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log(selectedAnswers)
-    const pval=(selectedAnswers.filter(a => a !== "").length / questions.length) * 100;
+    const pval = (selectedAnswers.filter(a => a !== "").length / questions.length) * 100;
     setProgress(pval);
-  },[selectedAnswers])
+  }, [selectedAnswers])
+
+  const handleReset = () => {
+    setSelectedAnswers(Array(questions.length).fill(""));
+    setIsSubmitted(false);
+    setScore(0);
+    setProgress(0);
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -99,17 +106,33 @@ export default function Test({ questions, title, clearPDF }: TestProps) {
             ))}
           </ScrollArea>
         </CardContent>
-        <CardFooter className="flex flex-col items-center gap-4">
+        <CardFooter className="flex flex-col items-center gap-4 w-full">
           {isSubmitted ? (
             <div className="text-center">
               <h3 className="text-2xl font-bold mb-2">Your Score: {score} / {questions.length}</h3>
               <p className="text-muted-foreground mb-4">
-                {score === questions.length ? "Perfect score! 🎉" : 
-                 score >= questions.length * 0.7 ? "Great job! 👏" : 
-                 score >= questions.length * 0.5 ? "Good effort! 💪" : 
-                 "Keep practicing! 📚"}
+                {score === questions.length ? "Perfect score! 🎉" :
+                  score >= questions.length * 0.7 ? "Great job! 👏" :
+                    score >= questions.length * 0.5 ? "Good effort! 💪" :
+                      "Keep practicing! 📚"}
               </p>
-              <Button onClick={clearPDF}>Start New Quiz</Button>
+
+              <div className="flex justify-between w-full items-center gap-2">
+              <Button
+                        onClick={handleReset}
+                        variant="outline"
+                        className="bg-muted hover:bg-muted/80 "
+                      >
+                        <RefreshCw className="mr-2 h-8 w-4" /> Reset Quiz
+                      </Button>
+                      <Button
+                        onClick={clearPDF}
+                        className="bg-primary hover:bg-primary/90 "
+                      >
+                        Try Other Questions
+                        </Button>
+              </div>
+                         
             </div>
           ) : (
             <Button

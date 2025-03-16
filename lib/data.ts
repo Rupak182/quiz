@@ -1,9 +1,50 @@
 
 
-import { testQuestionsSchema } from "@/lib/schemas";
+import { flashCardsSchema, testQuestionsSchema } from "@/lib/schemas";
 import { z } from "zod";
 
-export const data :z.infer<typeof testQuestionsSchema> = [
+export const data: z.infer<typeof flashCardsSchema> = [
+    {
+      question: "What is ChatGPT?",
+      answer: "A language model that allows people to interact with a computer in a more natural and conversational way."
+    },
+    {
+      question: "What does GPT stand for?",
+      answer: "Generative Pre-trained Transformer."
+    },
+    {
+      question: "What technology does ChatGPT use to learn from internet data?",
+      answer: "Natural language processing."
+    },
+    {
+      question: "Why should prompts be specific when using ChatGPT?",
+      answer: "To produce a more relevant result."
+    },
+    {
+      question: "What are some challenges and ethical implications of AI in higher education?",
+      answer: "Academic integrity, lack of regulation, privacy concerns, cognitive bias, gender and diversity, accessibility, and commercialization."
+    },
+    {
+      question: "What are some applications of ChatGPT in higher education?",
+      answer: "Teaching and learning, research, administration, and community engagement."
+    },
+    {
+      question: "What provides a foundation for AI systems to work for the betterment of individuals, societies, and ecosystems?",
+      answer: "The UNESCO Recommendation on the Ethics of AI."
+    },
+    {
+      question: "What is one of the goals of the UNESCO Recommendation on the Ethics of AI?",
+      answer: "To prevent harm from or by AI."
+    },
+    {
+      question: "What are the stages of an AI audit in higher education?",
+      answer: "Conduct an AI audit, decide which AI to use, and monitor performance and equity."
+    }
+  ];
+
+
+
+export const data2: z.infer<typeof testQuestionsSchema> = [
     {
         "question": "What is ChatGPT?",
         "options": [

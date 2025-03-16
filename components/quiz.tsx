@@ -122,7 +122,7 @@ export default function Quiz({
     setScore(correctAnswers);
   };
 
-  const handleReset = () => {
+   const handleReset = () => {
     setAnswers(Array(questions.length).fill(null));
     setIsSubmitted(false);
     setScore(null);
@@ -204,7 +204,7 @@ export default function Quiz({
                         onClick={clearPDF}
                         className="bg-primary hover:bg-primary/90 w-full"
                       >
-                        <FileText className="mr-2 h-4 w-4" /> Try Another PDF
+                        <FileText className="mr-2 h-4 w-4" /> Try Other Questions
                       </Button>
                     </div>
                   </div>

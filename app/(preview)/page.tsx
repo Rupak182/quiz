@@ -3,22 +3,17 @@ import { data } from "@/lib/data";
 
 const options = [
   {
-    label: "Test",
-    href: "/test",
-  },
-  {
     label: "Learn",
-    href: "/learn",
+    handler: "handleLearnClick",
+  },
+  {
+    label: "Test",
+    handler: "handleTestClick",
   },
 
   {
-    label: "Match",
-    href: "/match",
-  },
-
-  {
-    label: "Blast",
-    href: "/blast",
+    label: "FlashCards",
+    handler: "handleFlashClick",
   }
 ];
 
@@ -26,7 +21,7 @@ const options = [
 
 import { useEffect, useState } from "react";
 import { experimental_useObject } from "@ai-sdk/react";
-import { learnQuestionsSchema, questionsSchema, testQuestionsSchema } from "@/lib/schemas";
+import { flashCardSchema, flashCardsSchema, learnQuestionsSchema, testQuestionsSchema } from "@/lib/schemas";
 import { z } from "zod";
 import { toast } from "sonner";
 import { FileUp, Plus, Loader2 } from "lucide-react";
@@ -48,6 +43,7 @@ import { VercelIcon, GitIcon } from "@/components/icons";
 import { useRouter } from "next/navigation";
 import Quiz from "@/components/quiz";
 import Test from "@/components/test";
+import Flash from "@/components/Flash";
 
 export default function PDFQuizGenerator() {
   const [files, setFiles] = useState<File[]>([]);
@@ -56,14 +52,15 @@ export default function PDFQuizGenerator() {
   const [quizType,setQuizType] = useState<string>();
   const [learnQuestion, setLearnQuestion] = useState<z.infer<typeof learnQuestionsSchema> >([]);
   const [testQuestion, setTestQuestion] = useState<z.infer<typeof testQuestionsSchema> >([]);
+  const [flashCard, setFlashCard] = useState<z.infer<typeof flashCardsSchema> >([]);
 
   const {
     submit,
     object: partialQuestions,
     isLoading,
   } = experimental_useObject({
-    api: quizType === "test" ? "/api/generate-test" : "/api/generate-quiz",
-    schema: quizType === "test" ? testQuestionsSchema : learnQuestionsSchema,
+    api: quizType === "test" ? "/api/generate-test" : quizType === "flash" ? "/api/generate-flash-cards" : "/api/generate-quiz",
+    schema: quizType === "test" ? testQuestionsSchema : quizType === "flash" ? flashCardsSchema : learnQuestionsSchema,
     initialValue: undefined,
     onError: (error: Error) => {
       toast.error("Failed to generate quiz. Please try again.");
@@ -77,6 +74,9 @@ export default function PDFQuizGenerator() {
           setLearnQuestion(object);
         } else if (quizType === "test") {
           setTestQuestion(object);
+        }
+        else if(quizType==="flash"){
+          setFlashCard(object);
         }
       }
     },
@@ -137,6 +137,7 @@ export default function PDFQuizGenerator() {
             data: await encodeFileAsBase64(file),
           })),
         );
+        console.log(quizType)
         submit({ files: encodedFiles });
         const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
         setTitle(generatedTitle);
@@ -156,12 +157,19 @@ export default function PDFQuizGenerator() {
     setQuizType("learn"); // This will trigger the useEffect
   };
 
+  const handleFlashClick = async () => {
+    if (files.length === 0) return;
+    setQuizType("flash"); // This will trigger the useEffect
+  };
+
   const clearPDF = () => {
     setFiles([]);
     if (quizType === "learn") {
       setLearnQuestion([]);
     } else if (quizType === "test") {
       setTestQuestion([]);
+    }else if(quizType === "flash"){
+      setFlashCard([]);
     }
   };
 
@@ -181,13 +189,36 @@ export default function PDFQuizGenerator() {
     );
   }
 
+  if (flashCard.length === 5 && quizType === "flash") {
+    return (
+      <Flash title={title ?? "Quiz"} flashCards={flashCard} clearPDF={clearPDF}  />
+    );
+  }
+
   // return <Test title={title ?? "Quiz"} questions={data} clearPDF={clearPDF}  />
+  // return <Flash title={title ?? "Quiz"} flashCards={data} clearPDF={clearPDF}  />
+  const handlers = {
+    handleLearnClick,
+    handleTestClick,
+    handleFlashClick,
+  };
 
 
   return (
     <div className="min-h-[100dvh] w-full flex justify-center flex-col" >
       <div className=" w-screen flex flex-col items-center justify-center">
-        <h1 className="text-6xl font-bold">Quizzy</h1>
+        <h1 className="text-6xl font-bold mt-7">Quizzy</h1>
+        <div className="w-full  mt-7 flex items-center justify-center font-bold">
+                {isLoading ? (
+                  <span className="flex items-center gap-3">
+                    <Loader2 className="h-4 w-4 animate-spin " />
+                    <span>Generating Quiz...</span>
+                  </span>
+                ) : (
+                  "Upload a document to generate a quiz"
+                )}
+        </div>
+        
         <div className="flex mt-12 gap-4">
           {
            options.map((option) => (
@@ -195,8 +226,7 @@ export default function PDFQuizGenerator() {
               variant="secondary"
               key={option.label}
               disabled={files.length ===  0} 
-              onClick={() => handleLearnClick()}
-            >
+              onClick={() => handlers[option.handler as keyof typeof handlers]()}            >
               {option.label}
             </Button>
           ))
@@ -283,73 +313,13 @@ export default function PDFQuizGenerator() {
                   )}
                 </p>
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={files.length === 0}
-              >
-                {isLoading ? (
-                  <span className="flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Generating Quiz...</span>
-                  </span>
-                ) : (
-                  "Generate Quiz"
-                )}
-              </Button>
+              
             </form>
           </CardContent>
-          {isLoading && (
-            <CardFooter className="flex flex-col space-y-4">
-              <div className="w-full space-y-1">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Progress</span>
-                  <span>{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} className="h-2" />
-              </div>
-              <div className="w-full space-y-2">
-                <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
-                  <div
-                    className={`h-2 w-2 rounded-full ${isLoading ? "bg-yellow-500/50 animate-pulse" : "bg-muted"
-                      }`}
-                  />
-                  <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-                    {partialQuestions
-                      ? `Generating question ${partialQuestions.length + 1} of 4`
-                      : "Analyzing PDF content"}
-                  </span>
-                </div>
-              </div>
-            </CardFooter>
-          )}
         </Card>
-        <motion.div
-          className="flex flex-row gap-4 items-center justify-between fixed bottom-6 text-xs "
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-        >
-          <NextLink
-            target="_blank"
-            href="https://github.com/vercel-labs/ai-sdk-preview-pdf-support"
-            className="flex flex-row gap-2 items-center border px-2 py-1.5 rounded-md hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-800"
-          >
-            <GitIcon />
-            View Source Code
-          </NextLink>
-
-          <NextLink
-            target="_blank"
-            href="https://vercel.com/templates/next.js/ai-quiz-generator"
-            className="flex flex-row gap-2 items-center bg-zinc-900 px-2 py-1.5 rounded-md text-zinc-50 hover:bg-zinc-950 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-50"
-          >
-            <VercelIcon size={14} />
-            Deploy with Vercel
-          </NextLink>
-        </motion.div>
-
 
       </div>
+      
     </div>
   );
 }

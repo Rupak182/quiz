@@ -145,7 +145,7 @@ export default function PDFQuizGenerator() {
   
       handleSubmit();
     }
-  }, [quizType]); // Trigger when quizType changes
+  }, [quizType,files,submit]); // Trigger when quizType changes
   
   const handleTestClick = async () => {
     if (files.length === 0) return;
@@ -209,7 +209,7 @@ export default function PDFQuizGenerator() {
       <div className=" w-screen flex flex-col items-center justify-center">
         <h1 className="text-6xl font-bold mt-7">Quizzy</h1>
         <div className="w-full  mt-7 flex items-center justify-center font-bold">
-                {isLoading ? (
+                {isLoading && files.length > 0 && quizType ? (
                   <span className="flex items-center gap-3">
                     <Loader2 className="h-4 w-4 animate-spin " />
                     <span>Generating Quiz...</span>

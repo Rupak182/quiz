@@ -45,7 +45,7 @@ export default function Test({ questions, title, clearPDF }: TestProps) {
     console.log(selectedAnswers)
     const pval = (selectedAnswers.filter(a => a !== "").length / questions.length) * 100;
     setProgress(pval);
-  }, [selectedAnswers])
+  }, [selectedAnswers, questions])
 
   const handleReset = () => {
     setSelectedAnswers(Array(questions.length).fill(""));

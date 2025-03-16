@@ -53,7 +53,7 @@ export default function Flash({ title, flashCards, clearPDF }: {
                     </CardHeader>
                     <CardContent className="flex flex-col items-center gap-4">
                         <Check className="h-16 w-16 text-green-500" />
-                        <p className="text-muted-foreground">You've completed all the flash cards.</p>
+                        <p className="text-muted-foreground">You&apos;ve completed all the flash cards.</p>
                     </CardContent>
                     <CardFooter className="flex justify-between ">
                         <Button

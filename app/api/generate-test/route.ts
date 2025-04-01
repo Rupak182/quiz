@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   console.log(files)
 
   const result = streamObject({
-    model: google("gemini-2.0-flash-thinking-exp-01-21"),
+    model: google("gemini-2.0-flash-exp"),
     messages: [
       {
         role: "system",

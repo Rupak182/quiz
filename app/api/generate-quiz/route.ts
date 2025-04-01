@@ -7,10 +7,9 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   const { files } = await req.json();
   const firstFile = files[0].data;
-  console.log(files)
 
   const result = streamObject({
-    model: google("gemini-2.0-flash-thinking-exp-01-21"),
+    model: google("gemini-2.0-flash-exp"),
     messages: [
       {
         role: "system",
